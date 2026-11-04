@@ -1,0 +1,24 @@
+modelo fwd Wup   M=2048 N=1024 K=256
+  dp4a                          0.324 ms    3.32 TOPS
+  bitwise 8x8 planos (exato)    3.650 ms    0.29 TOPS  (11.3x mais lento)  + conversao p/ planos 0.053 ms
+  bitwise 4x4 planos (aprox)    1.002 ms    1.07 TOPS  (3.1x)
+  bitwise 2x2 planos (aprox)    0.360 ms    2.99 TOPS  (1.1x)
+  bitwise 1x1 plano  (sinal)    0.195 ms    5.51 TOPS  (0.6x)
+  conferencia: bitwise 8x8 x dp4a: 0 diferencas de 2097152; dp4a x CPU (64 amostras): 0
+
+modelo fwd Wd    M=2048 N=256 K=1024
+  dp4a                          0.335 ms    3.20 TOPS
+  bitwise 8x8 planos (exato)    3.928 ms    0.27 TOPS  (11.7x mais lento)  + conversao p/ planos 0.151 ms
+  bitwise 4x4 planos (aprox)    1.066 ms    1.01 TOPS  (3.2x)
+  bitwise 2x2 planos (aprox)    0.370 ms    2.90 TOPS  (1.1x)
+  bitwise 1x1 plano  (sinal)    0.183 ms    5.85 TOPS  (0.5x)
+  conferencia: bitwise 8x8 x dp4a: 0 diferencas de 524288; dp4a x CPU (64 amostras): 0
+
+quadrada 2048    M=2048 N=2048 K=2048
+  dp4a                          5.160 ms    3.33 TOPS
+  bitwise 8x8 planos (exato)   44.169 ms    0.39 TOPS  (8.6x mais lento)  + conversao p/ planos 0.519 ms
+  bitwise 4x4 planos (aprox)   12.065 ms    1.42 TOPS  (2.3x)
+  bitwise 2x2 planos (aprox)    4.384 ms    3.92 TOPS  (0.8x)
+  bitwise 1x1 plano  (sinal)    2.312 ms    7.43 TOPS  (0.4x)
+  conferencia: bitwise 8x8 x dp4a: 0 diferencas de 4194304; dp4a x CPU (64 amostras): 0
+

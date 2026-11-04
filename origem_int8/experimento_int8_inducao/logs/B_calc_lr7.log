@@ -1,0 +1,11 @@
+modo=B_calc lr=7.0 passos=4000 | acaso=6.2%
+passo     0 | acuracia   6.8% | max|peso| 55
+passo   500 | acuracia 100.0% | max|peso| 70
+passo  1000 | acuracia 100.0% | max|peso| 72
+passo  1500 | acuracia 100.0% | max|peso| 74
+passo  2000 | acuracia 100.0% | max|peso| 75
+passo  2500 | acuracia 100.0% | max|peso| 76
+passo  3000 | acuracia 100.0% | max|peso| 77
+passo  3500 | acuracia 100.0% | max|peso| 77
+passo  4000 | acuracia 100.0% | max|peso| 77
+tempo 98s

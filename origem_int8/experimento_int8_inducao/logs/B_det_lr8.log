@@ -1,0 +1,11 @@
+modo=B_det lr=8.0 passos=4000 | acaso=6.2%
+passo     0 | acuracia   6.8% | max|peso| 55
+passo   500 | acuracia  99.9% | max|peso| 66
+passo  1000 | acuracia  99.9% | max|peso| 70
+passo  1500 | acuracia 100.0% | max|peso| 71
+passo  2000 | acuracia 100.0% | max|peso| 72
+passo  2500 | acuracia  99.9% | max|peso| 73
+passo  3000 | acuracia 100.0% | max|peso| 73
+passo  3500 | acuracia 100.0% | max|peso| 76
+passo  4000 | acuracia 100.0% | max|peso| 76
+tempo 103s

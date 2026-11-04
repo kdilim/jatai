@@ -1,0 +1,11 @@
+modo=A_sim lr=5.0 passos=4000 | acaso=6.2%
+passo     0 | acuracia   7.7% | max|peso| 8
+passo   500 | acuracia   5.8% | max|peso| 128
+passo  1000 | acuracia   6.5% | max|peso| 128
+passo  1500 | acuracia   6.9% | max|peso| 128
+passo  2000 | acuracia   5.6% | max|peso| 128
+passo  2500 | acuracia   6.7% | max|peso| 128
+passo  3000 | acuracia   5.8% | max|peso| 128
+passo  3500 | acuracia   6.5% | max|peso| 128
+passo  4000 | acuracia   6.6% | max|peso| 128
+tempo 117s

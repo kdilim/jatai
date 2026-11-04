@@ -1,0 +1,4 @@
+SMs: 14
+dp4a  (INT8):         10.06 TOPS
+FMA   FP32:            2.52 TFLOPS
+HFMA2 FP16 (half2):    5.04 TFLOPS

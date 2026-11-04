@@ -25,6 +25,7 @@ Duas perguntas, testadas do zero numa GPU de consumo:
 ## Sumário
 
 - [Resultados em uma tabela](#resultados-em-uma-tabela)
+- [Parte 0: origem, a série "treino em inteiros puros"](#parte-0-origem-a-série-treino-em-inteiros-puros)
 - [Parte 1: treino 100% INT8](#parte-1-treino-100-int8)
 - [Parte 2: rede 100% binária sem STE](#parte-2-rede-100-binária-sem-ste)
 - [Quanto trabalho dá para cortar sem gastar memória](#quanto-trabalho-dá-para-cortar-sem-gastar-memória)
@@ -43,6 +44,25 @@ Duas perguntas, testadas do zero numa GPU de consumo:
 |---|---|---|---|
 | **INT8** | Treino 3,84x mais rápido que o float32; kernels exatos bit a bit; diagnóstico que localiza qualquer erro no kernel e na posição | Modelo de 24 camadas para de aprender no passo ~3.000 (melhor validação 2,03; o float chega a 1,47 no passo 20.000) | O fluxo residual cresce sem parar e a soma em INT8 apaga até 67% do que as camadas de cima escrevem; o crescimento em si ficou sem explicação |
 | **Binário** | O treino inteiro alcançou o float: loss 2,21 contra 2,09 (antes: 2,65) | A rede de bits que roda fica em 7% de acurácia (rede de médias: 36%); pulsos e ternário chegam só a 13–16% | O treino otimiza a rede de *médias*; nenhuma conversão para bits depois sobrevive num modelo de 2,8 M pesos |
+
+---
+
+## Parte 0: origem, a série "treino em inteiros puros"
+
+Experimentos curtos que vieram antes da biblioteca INT8 e decidiram o formato dela. Cada um tem README, código e
+resultados próprios em [`origem_int8/`](origem_int8/).
+
+| experimento | pergunta | resultado principal |
+|---|---|---|
+| [1. indução INT8](origem_int8/experimento_int8_inducao/) | um Transformer 100% inteiro **aprende**? (tarefa de indução, acaso 6,25%) | ✅ o esquema novo (B, B_det, B_calc) chega a **100%**, igual à referência float. ❌ o método anterior (A) fica no acaso (5,6–6,3%): os pesos colam em ±127. Ressalva: 1 semente, CPU, modelo minúsculo (D = 32) |
+| [3. análise passo a passo](origem_int8/experimento_analise_int8/) | onde o valor passa de 8 bits e quanto a direção do gradiente desvia (12 camadas) | cosseno do gradiente inteiro contra o float64 de **0,993–0,9995**; ReLU² e ALiBi são as escolhas mais fiéis |
+| [4. expoente por bloco de 32](origem_int8/experimento_bloco32/) | um expoente por bloco reduz o desvio? | desvio após 12 camadas de **9,4%** (bloco) contra 21,5% (expoente por tensor); BF16: 1,5%; 0 saturações em 7 milhões de valores |
+| [6. kernel GEMM INT8](origem_int8/kernel_int8_b32/) | o formato multiplica matrizes mais rápido que o FP32 nesta GPU? | ✅ **2,3–2,8x** o FP32 equivalente e **1,8–3,9x** o cuBLAS FP32; pico medido do `dp4a`: 10,06 TOPS. ❌ GEMM só com bits: 8,6–12x mais lento |
+| [apoio: gargalo da VRAM](origem_int8/experimento_gargalo_vram/) | quanto custa gravar na memória a cada etapa? | etapas separadas são **7,5x** mais lentas que fundidas; banda real 121 de 192 GB/s, o que motivou fundir operações nos kernels |
+
+Os experimentos 1, 3 e 4 medem só fidelidade numérica ou tarefas pequenas, com pesos aleatórios ou um modelo
+minúsculo. A prova de aprendizado em escala é a Parte 1. O experimento 5 (protótipo inteiro em PyTorch) está em
+`treino_int8_gpu/`.
 
 ---
 
@@ -253,6 +273,7 @@ mesma GPU. Nesta GPU o fp16 é 2–5x **mais lento** que o fp32, por isso a refe
 ├── CITATION.cff              como citar
 ├── gerar_graficos.py         gera figuras/ a partir dos logs
 ├── figuras/                  gráficos em versão clara e escura (SVG)
+├── origem_int8/              série "treino em inteiros puros" (experimentos 1, 3, 4, 6 e VRAM)
 ├── jatai_cuda/               treino 100% INT8
 │   ├── jatai_cuda.cu         biblioteca CUDA (todos os kernels do treino)
 │   ├── ops.py, modelo.py     chamadas aos kernels e o Transformer INT8

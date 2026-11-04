@@ -1,0 +1,29 @@
+GPU: NVIDIA GeForce GTX 1650 | SMs 14 | L2 1024 KB | barramento 128 bits | clock mem 6001 MHz
+Banda teorica da VRAM (pelo driver): 192 GB/s
+
+Pico __dp4a (so registradores): 9.98 TOPS INT8
+
+== 256 MB (nao cabe no L2 -> VRAM) | so ler+gravar uma vez: 4.441 ms = 121 GB/s efetivos
+  etapas | fundido (ms) | separado (ms) | separado/fundido | trafego VRAM separado
+       1 |        4.463 |         4.298 |             1.0x |    0.5 GB
+       2 |        4.467 |         8.593 |             1.9x |    1.1 GB
+       4 |        4.628 |        17.176 |             3.7x |    2.1 GB
+       8 |        5.197 |        34.402 |             6.6x |    4.3 GB
+      16 |        9.115 |        68.738 |             7.5x |    8.6 GB
+      32 |       18.438 |       137.427 |             7.5x |   17.2 GB
+      64 |       36.332 |       274.794 |             7.6x |   34.4 GB
+     128 |       71.382 |       549.934 |             7.7x |   68.7 GB
+  conferencia (16 etapas): 0 diferencas entre fundido e separado
+
+== 512 KB (cabe no L2 de 1 MB) | so ler+gravar uma vez: 0.005 ms = 211 GB/s efetivos
+  etapas | fundido (ms) | separado (ms) | separado/fundido | trafego VRAM separado
+       1 |        0.006 |         0.006 |             1.1x |    0.0 GB
+       2 |        0.007 |         0.011 |             1.6x |    0.0 GB
+       4 |        0.008 |         0.021 |             2.6x |    0.0 GB
+       8 |        0.012 |         0.043 |             3.7x |    0.0 GB
+      16 |        0.020 |         0.086 |             4.4x |    0.0 GB
+      32 |        0.035 |         0.172 |             4.9x |    0.0 GB
+      64 |        0.066 |         0.350 |             5.3x |    0.1 GB
+     128 |        0.130 |         0.704 |             5.4x |    0.1 GB
+  conferencia (16 etapas): 0 diferencas entre fundido e separado
+

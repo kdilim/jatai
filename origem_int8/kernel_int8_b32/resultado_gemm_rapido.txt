@@ -1,0 +1,16 @@
+conferencia (M=N=128, K=512, mantissas aleatorias, expoentes por bloco variando 5 valores):
+  INT8 bloco K= 32: erro 0.866%   (regua, so arredondar a saida exata: 0.866%)
+  INT8 bloco K= 64: erro 0.977%   (regua, so arredondar a saida exata: 0.977%)
+  INT8 bloco K=128: erro 1.010%   (regua, so arredondar a saida exata: 1.010%)
+  INT8 bloco K=256: erro 1.074%   (regua, so arredondar a saida exata: 1.074%)
+  FP32 proprio:     erro 0.00004%
+
+velocidade (TFLOPS para float, TOPS para INT8; 1 multiplicacao + 1 soma = 2 operacoes)
+M x N x K         |  cuBLAS  cuBLAS |    FP32 |    INT8    INT8    INT8    INT8 |  INT8 b128  INT8 b128
+                  |    FP32    FP16 | proprio |     b32     b64    b128    b256 | /FP32 prop  /cuBLAS32
+1024x256x256      |    1.17    0.27 |    0.91 |    1.43    1.74    2.04    2.16 |      2.23x      1.75x
+1024x1024x256     |    1.28    0.34 |    1.71 |    2.76    3.33    3.77    4.11 |      2.20x      2.94x
+1024x256x1024     |    1.64    0.35 |    1.25 |    2.18    2.68    3.07    3.30 |      2.46x      1.87x
+4096x1024x1024    |    2.53    0.37 |    1.93 |    3.31    3.96    4.52    4.84 |      2.35x      1.79x
+8192x4096x1024    |    2.54    0.38 |    1.96 |    3.38    4.04    4.58    4.88 |      2.34x      1.80x
+4096x4096x4096    |    1.65    0.38 |    1.96 |    3.77    4.63    5.35    5.86 |      2.74x      3.24x

@@ -1,0 +1,96 @@
+Configuracao: D=256, 64 cabecas x head_dim 4, FF=1024, 12 camadas, T=64, lote=2
+
+====================================================================================================
+PARTE 1 - passo a passo da camada 1 (ALiBi + ReGLU; RoPE e SiLU listados a parte)
+====================================================================================================
+
+--- alibi + reglu ---
+operacao                                                     bits exatos  onde vive      erro local
+RMSNorm 1: soma dos quadrados                                         20  registrador                <-- passa de 8 bits
+RMSNorm 1: x*32*(1/r)                                                 24  registrador                <-- passa de 8 bits
+RMSNorm 1: saida                                                       8  memoria INT8     1.83e-02
+Q: acumulador do produto escalar                                      18  registrador                <-- passa de 8 bits
+Q: saida                                                               8  memoria INT8     1.78e-02
+K: acumulador do produto escalar                                      18  registrador                <-- passa de 8 bits
+K: saida                                                               8  memoria INT8     1.78e-02
+V: acumulador do produto escalar                                      18  registrador                <-- passa de 8 bits
+V: saida                                                               8  memoria INT8     1.78e-02
+scores q.k (head_dim 4)                                               14  registrador                <-- passa de 8 bits
+score + vies ALiBi (unidades 2^-8 nat)                                16  registrador                <-- passa de 8 bits
+softmax: soma das exp (Q15)                                           22  registrador                <-- passa de 8 bits
+softmax: exp*(1/soma)                                                 31  registrador                <-- passa de 8 bits
+softmax: probabilidades                                                9  memoria UINT8    1.18e-02
+P@V: acumulador                                                       15  registrador                <-- passa de 8 bits
+P@V: saida                                                             8  memoria INT8     1.85e-02
+O: acumulador do produto escalar                                      17  registrador                <-- passa de 8 bits
+O: saida                                                               8  memoria INT8     1.86e-02
+residual 1: soma alinhada                                              9  registrador                <-- passa de 8 bits
+RMSNorm 2: soma dos quadrados                                         19  registrador                <-- passa de 8 bits
+RMSNorm 2: x*32*(1/r)                                                 24  registrador                <-- passa de 8 bits
+RMSNorm 2: saida                                                       8  memoria INT8     2.87e-02
+MLP up: acumulador do produto escalar                                 18  registrador                <-- passa de 8 bits
+MLP up: saida                                                          8  memoria INT8     1.76e-02
+MLP gate: acumulador do produto escalar                               18  registrador                <-- passa de 8 bits
+MLP gate: saida                                                        8  memoria INT8     1.77e-02
+ReGLU: relu(gate)*up                                                  13  registrador                <-- passa de 8 bits
+reglu: saida                                                           8  memoria INT8     3.43e-02
+MLP down: acumulador do produto escalar                               16  registrador                <-- passa de 8 bits
+MLP down: saida                                                        8  memoria INT8     1.21e-02
+residual 2: soma alinhada                                              9  registrador                <-- passa de 8 bits
+
+--- rope + relu2 ---
+operacao                                                     bits exatos  onde vive      erro local
+RoPE em Q: x*cos - y*sin (Q14)                                        21  registrador                <-- passa de 8 bits
+RoPE em Q: saida                                                       8  memoria INT8     1.74e-02
+RoPE em K: x*cos - y*sin (Q14)                                        22  registrador                <-- passa de 8 bits
+RoPE em K: saida                                                       8  memoria INT8     1.73e-02
+ReLU^2: x*x                                                           14  registrador                <-- passa de 8 bits
+relu2: saida                                                           8  memoria INT8     3.75e-02
+
+--- rope + silu ---
+operacao                                                     bits exatos  onde vive      erro local
+RoPE em Q: x*cos - y*sin (Q14)                                        21  registrador                <-- passa de 8 bits
+RoPE em Q: saida                                                       8  memoria INT8     1.74e-02
+RoPE em K: x*cos - y*sin (Q14)                                        22  registrador                <-- passa de 8 bits
+RoPE em K: saida                                                       8  memoria INT8     1.73e-02
+SiLU: sigmoide = numerador/(1+exp) (divisao por elemento)             32  registrador                <-- passa de 8 bits
+SiLU: x*sigmoide                                                      23  registrador                <-- passa de 8 bits
+silu: saida                                                            8  memoria INT8     3.15e-02
+
+====================================================================================================
+PARTE 2 - erro acumulado ao longo de 12 camadas (inteiro vs float64, mesmos pesos)
+====================================================================================================
+combinacao       c1     c3     c6     c9     c12     maior bits num registrador
+alibi+relu2      0.065 0.117 0.157 0.192 0.215  31
+alibi+reglu      0.049 0.096 0.160 0.202 0.246  31
+alibi+silu       0.040 0.088 0.138 0.171 0.193  32
+rope+relu2       0.068 0.120 0.162 0.191 0.216  31
+rope+reglu       0.051 0.100 0.169 0.214 0.263  31
+rope+silu        0.042 0.084 0.134 0.164 0.181  32
+
+====================================================================================================
+PARTE 3 - backward local: similaridade de cosseno gradiente inteiro x float (1.0 = identico)
+====================================================================================================
+atencao alibi : dX 0.9971 | dW_q 0.9965 | dW_o 0.9995 | zeros em dX 0.0334
+atencao rope  : dX 0.9950 | dW_q 0.9953 | dW_o 0.9990 | zeros em dX 0.0579
+MLP relu2     : dX 0.9993 | dW_up 0.9993 | dW_down 0.9990 | zeros em dX 0.0151
+MLP reglu     : dX 0.9926 | dW_up 0.9993 | dW_down 0.9990 | zeros em dX 0.0209
+MLP silu      : dX 0.9995 | dW_up 0.9996 | dW_down 0.9993 | zeros em dX 0.0153
+
+====================================================================================================
+PARTE 4 - produto escalar sem nenhum valor acima de 8 bits (2000 testes)
+====================================================================================================
+
+K = 256 termos (dimensao do produto escalar)
+esquema                                                         erro rel  correlacao  maior valor
+acumulador int32 (como hoje), so a saida vira INT8                 0.009      1.0000      17 bits
+acumulador INT8 saturando (produto >>7)                            0.535      0.9033      15 bits
+arvore INT8: (a>>1)+(b>>1) a cada nivel (produto >>7)              7.917      0.7132      15 bits
+tudo <= 8 bits: operandos >>4, produto e arvore em INT8           14.471      0.4710       8 bits
+
+K = 1024 termos (dimensao do produto escalar)
+esquema                                                         erro rel  correlacao  maior valor
+acumulador int32 (como hoje), so a saida vira INT8                 0.009      1.0000      18 bits
+acumulador INT8 saturando (produto >>7)                            0.850      0.6108      15 bits
+arvore INT8: (a>>1)+(b>>1) a cada nivel (produto >>7)             18.407      0.5155      15 bits
+tudo <= 8 bits: operandos >>4, produto e arvore em INT8           31.872      0.1520       8 bits

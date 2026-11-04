@@ -1,0 +1,2 @@
+separado (tudo INT8)       c1  2.12% c3  4.09% c6  6.37% c9  8.13% c12  9.44% | maior registrador: 29 bits (scores 17, P@V 22) | saturados 0
+fundido (Q,K,P 12 bits)    c1  2.04% c3  4.01% c6  6.30% c9  8.06% c12  9.29% | maior registrador: 29 bits (scores 25, P@V 23) | saturados 0

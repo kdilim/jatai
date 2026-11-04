@@ -1,0 +1,6 @@
+K=  256 arvore INT8 simetrica (produto >>7)        erro rel   2.322 | correlacao 0.8807
+K=  256 tudo <= 8 bits simetrico (operandos >>4)   erro rel   4.458 | correlacao 0.7926
+K= 1024 arvore INT8 simetrica (produto >>7)        erro rel   4.774 | correlacao 0.8173
+K= 1024 tudo <= 8 bits simetrico (operandos >>4)   erro rel   9.188 | correlacao 0.7316
+FP16 vs float64, alibi+relu2: c1 0.001 c3 0.001 c6 0.001 c9 0.002 c12 0.002
+BF16 vs float64, alibi+relu2: c1 0.006 c3 0.009 c6 0.011 c9 0.013 c12 0.015

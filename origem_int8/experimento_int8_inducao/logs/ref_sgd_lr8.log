@@ -1,0 +1,11 @@
+modo=ref_sgd lr=8.0 passos=4000 | acaso=6.2%
+passo     0 | acuracia   6.5%
+passo   500 | acuracia 100.0%
+passo  1000 | acuracia 100.0%
+passo  1500 | acuracia 100.0%
+passo  2000 | acuracia 100.0%
+passo  2500 | acuracia 100.0%
+passo  3000 | acuracia 100.0%
+passo  3500 | acuracia 100.0%
+passo  4000 | acuracia 100.0%
+tempo 51s
