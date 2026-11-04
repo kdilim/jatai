@@ -28,6 +28,7 @@ Duas perguntas, testadas do zero numa GPU de consumo:
 - [Parte 0: origem, a série "treino em inteiros puros"](#parte-0-origem-a-série-treino-em-inteiros-puros)
 - [Parte 1: treino 100% INT8](#parte-1-treino-100-int8)
 - [Parte 2: rede 100% binária sem STE](#parte-2-rede-100-binária-sem-ste)
+- [Histórico da pesquisa: tentativas anteriores que falharam](#histórico-da-pesquisa-tentativas-anteriores-que-falharam)
 - [Quanto trabalho dá para cortar sem gastar memória](#quanto-trabalho-dá-para-cortar-sem-gastar-memória)
 - [Vale a pena? Comparação com o caminho tradicional](#vale-a-pena-comparação-com-o-caminho-tradicional)
 - [Lições](#lições)
@@ -191,6 +192,29 @@ Tentamos três formas de guardar a nuance perdida:
   Como as não-linearidades se encadeiam, a média da rede sorteada não é a rede de médias.
 - O caminho conhecido para isso é o **STE**: o forward passa pela rede quantizada de verdade. O projeto o exclui
   por princípio, e mesmo com STE, o BitNet só alcança o float em modelos de centenas de milhões de pesos.
+
+---
+
+## Histórico da pesquisa: tentativas anteriores que falharam
+
+Antes das Partes 0 a 2, o projeto testou outras arquiteturas. As que têm medição estão abaixo, com o motivo da
+falha. O código delas não está neste repositório: estes resultados ficam como registro e como lição.
+
+| tentativa | ideia | o que aconteceu (medido) | por quê |
+|---|---|---|---|
+| **Kronecker em GF(2)** | pesos como produto de Kronecker sobre bits, resolvidos por álgebra (Gauss-Jordan em GF(2)) | no exemplo sintético de 1 amostra: **0 de 512 bits errados**. Em texto real (14.000 passos): **acerto 0,00%, loss 10,92**, o mesmo que chutar ao acaso entre ~55 mil tokens | resolver um sistema exato decora um exemplo; não generaliza. Em GF(2), camadas lineares se compõem numa só, e a paridade é a função mais "áspera" possível |
+| **APB-1650, por mutação** (v8–v14) | virar bits ao acaso e manter os melhores mutantes (evolução, annealing) | distância de Hamming de **255–256 de 512**, exatamente o acaso, com 97% das mutações aceitas | busca às cegas não escala num espaço de 2^196.608 combinações; escolher o melhor de 31 mutantes no mesmo lote seleciona ruído |
+| **APB-1650, Hebbiano / Willshaw** (v27–v42) | memória associativa de uma passada (`OR` acumulativo), MoE em bits | "tempestade de uns": com contexto por `OR`, a densidade foi de 1,9% para 31% e o Hamming de ~125 para **1992 de 2048** (a rede liga todos os bits); a inferência gerava texto sem sentido | `OR` só acumula, nunca desliga: a matriz satura. Atenção precisa de pesos graduados |
+| **Média de dimensões** (Qwen3.5-0.8B) | reduzir as cabeças de 256 para 4–64 dimensões por média ou PCA, sem retreinar | perplexidade de 13,96 para **16,8–39,9** (1,2x a 2,9x pior), e o modelo encolhe só **4,4–5,8%** | as cabeças são uma fração pequena dos pesos; e média/PCA sem retreino destrói o que elas aprenderam |
+| **Método inteiro em faixa fixa ±20** | inteiros pequenos com tabelas (LUT), sem escala | não aprende: **5,6–7,7%** de acerto na indução (acaso 6,25%) | `−1 >> k = −1`: o arredondamento puxa sempre para o mesmo lado e prende 97,7% dos pesos em +127. Corrigido na Parte 0 (arredondamento simétrico) |
+
+**Lições levadas adiante:** sinal de gradiente em vez de busca às cegas; somas inteiras graduadas em vez de `OR`;
+avaliar com entropia cruzada e com referência (float, n-grama, acaso), nunca só com Hamming ou com acerto nos
+próprios dados de treino; arredondamento simétrico.
+
+*Outras ideias exploradas no projeto (ressonância por hash, DNA/CRISPR em 2 bits, redes Kronecker em INT32,
+ARMB, BIRA e cerca de 20 arquiteturas de teste) ficaram como especificação ou protótipo sem comparação com uma
+referência, e por isso não entram aqui como resultado.*
 
 ---
 
