@@ -6,6 +6,7 @@ Otimizador: SGD com momento 7/8, lr = 2^-k, error feedback no peso.
 Inicializacao identica a de ../treino_int8_gpu (mesmo gerador e ordem), para comparar com o float.
 """
 import math
+import os
 
 import torch
 
@@ -20,6 +21,9 @@ def inicial(g, linhas, fan_in, dev, emb=False):
 
 def zeros_como(t):
     return torch.zeros_like(t[0]), torch.full_like(t[1], O.E_ZERO)
+
+
+R16 = os.environ.get("JATAI_RES16") == "1"     # E1: fluxo residual (forward e backward) com mantissa de 16 bits
 
 
 class Modelo:
@@ -53,26 +57,36 @@ class Modelo:
         with reg.trecho("forward"):
             with reg.trecho("embedding"):
                 x = ops.embed(p["emb"], tok)
+                if R16:                                         # E1: a esteira residual anda em 16 bits
+                    x16 = ops.para16(x)
             caches = []
             for l in range(self.L):
                 with reg.trecho(f"camada {l}"):
                     with reg.trecho("atencao"):
-                        n1, c1 = ops.rms(x)
+                        n1, c1 = ops.rms(ops.para8(x16) if R16 else x)
                         qkv = ops.gemm(n1, p[f"Wqkv{l}"])
                         oc, P = ops.atencao(qkv, Bt, T, self.H)
                         om = ops.quant(oc)
-                        x = ops.gemm_soma(om, p[f"Wo{l}"], x)          # x + om.Wo^T numa GEMM so (medido 1,57x)
+                        if R16:
+                            x16 = ops.soma16(x16, ops.gemm(om, p[f"Wo{l}"]))
+                            x = ops.para8(x16) if self.estatisticas else None
+                        else:
+                            x = ops.gemm_soma(om, p[f"Wo{l}"], x)          # x + om.Wo^T numa GEMM so (medido 1,57x)
                         self._st(f"c{l}.qkv", qkv); self._st(f"c{l}.atencao_saida", om); self._st(f"c{l}.residuo1", x)
                     with reg.trecho("mlp"):
-                        n2, c2 = ops.rms(x)
+                        n2, c2 = ops.rms(ops.para8(x16) if R16 else x)
                         # fundidas na saida da GEMM. Com o tile de 128 linhas (1 bloco por SM) estas fusoes perdiam
                         # (0,82x / 0,92x); com o de 64 (2 blocos por SM) ganham (1,12x / 1,05x). Ver README.
                         h, a = ops.gemm_relu2(n2, p[f"Wup{l}"])
-                        x = ops.gemm_soma(a, p[f"Wd{l}"], x)
+                        if R16:
+                            x16 = ops.soma16(x16, ops.gemm(a, p[f"Wd{l}"]))
+                            x = ops.para8(x16) if self.estatisticas else None
+                        else:
+                            x = ops.gemm_soma(a, p[f"Wd{l}"], x)
                         self._st(f"c{l}.relu2", a, zeros_normais=True); self._st(f"c{l}.residuo2", x)
                 caches.append((n1, c1, qkv, P, om, n2, c2, h, a))
             with reg.trecho("saida"):
-                nf, cf = ops.rms(x)
+                nf, cf = ops.rms(ops.para8(x16) if R16 else x)
                 logits = ops.gemm(nf, p["out"], cru=True)
                 g, d_alvo, soma = ops.softmax_ce(logits, alvo)
         # relatorio (fica na GPU; quem chama converte com float() depois do passo, sem parar a fila)
@@ -87,6 +101,8 @@ class Modelo:
                 gx = ops.gemm(g, T_(p["out"]))
                 gx = ops.rms_back(gx, nf, cf)
                 self._st("grad_saida", gx)
+                if R16:                                         # E1: o gradiente que volta pela esteira tambem em 16 bits
+                    gx16 = ops.para16(gx)
             for l in reversed(range(self.L)):
                 n1, c1, qkv, P, om, n2, c2, h, a = caches[l]
                 with reg.trecho(f"camada {l}"):
@@ -95,7 +111,11 @@ class Modelo:
                         gh = ops.gemm_relu2_back(gx, T_(p[f"Wd{l}"]), h)   # fundida: 1,14x (era 0,87x com tile 128)
                         grads[f"Wup{l}"] = ops.gemm(T_(gh), T_(n2), cru=True)
                         gn = ops.gemm(gh, T_(p[f"Wup{l}"]))
-                        gx = ops.soma(gx, ops.rms_back(gn, n2, c2))
+                        if R16:
+                            gx16 = ops.soma16(gx16, ops.rms_back(gn, n2, c2))
+                            gx = ops.para8(gx16)
+                        else:
+                            gx = ops.soma(gx, ops.rms_back(gn, n2, c2))
                         self._st(f"c{l}.grad_mlp", gh, zeros_normais=True)
                     with reg.trecho("atencao"):
                         grads[f"Wo{l}"] = ops.gemm(T_(gx), T_(om), cru=True)
@@ -103,7 +123,11 @@ class Modelo:
                         gq = ops.quant(ops.atencao_back(go, qkv, P, Bt, T, self.H))
                         grads[f"Wqkv{l}"] = ops.gemm(T_(gq), T_(n1), cru=True)
                         gn = ops.gemm(gq, T_(p[f"Wqkv{l}"]))
-                        gx = ops.soma(gx, ops.rms_back(gn, n1, c1))
+                        if R16:
+                            gx16 = ops.soma16(gx16, ops.rms_back(gn, n1, c1))
+                            gx = ops.para8(gx16)
+                        else:
+                            gx = ops.soma(gx, ops.rms_back(gn, n1, c1))
                         self._st(f"c{l}.grad_qkv", gq); self._st(f"c{l}.grad_residuo", gx)
             with reg.trecho("embedding"):
                 um = ops.um_quente(tok, self.V)                  # kernel proprio: token invalido vira sentinela, nao assert

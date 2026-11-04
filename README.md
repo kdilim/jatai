@@ -43,7 +43,7 @@ Duas perguntas, testadas do zero numa GPU de consumo:
 
 | | O que deu certo ✅ | O que deu errado ❌ | Por quê |
 |---|---|---|---|
-| **INT8** | Treino 3,84x mais rápido que o float32; kernels exatos bit a bit; diagnóstico que localiza qualquer erro no kernel e na posição | Modelo de 24 camadas para de aprender no passo ~3.000 (melhor validação 2,03; o float chega a 1,47 no passo 20.000) | O fluxo residual cresce sem parar e a soma em INT8 apaga até 67% do que as camadas de cima escrevem; o crescimento em si ficou sem explicação |
+| **INT8** | Treino 3,84x mais rápido que o float32; kernels exatos bit a bit; diagnóstico que localiza qualquer erro no kernel e na posição | Modelo de 24 camadas para de aprender no passo ~4.000 (melhor validação 2,02; o float chega a 1,47 no passo 20.000) | O resíduo cresce e a soma em INT8 apaga até 67% do que as camadas de cima escrevem, mas dar 16 bits ao resíduo não resolveu: a causa provável é o otimizador em INT8 |
 | **Binário** | O treino inteiro alcançou o float: loss 2,21 contra 2,09 (antes: 2,65) | A rede de bits que roda fica em 7% de acurácia (rede de médias: 36%); pulsos e ternário chegam só a 13–16% | O treino otimiza a rede de *médias*; nenhuma conversão para bits depois sobrevive num modelo de 2,8 M pesos |
 
 ---
@@ -102,11 +102,11 @@ modos:
   <img alt="Loss de validação: o float32 desce até 1,47 no passo 20.000; o INT8 chega a 2,07 no passo 2.500 e sobe até 3,68" src="figuras/int8_treino_longo_claro.svg" width="760">
 </picture>
 
-| passo | float32 | INT8 | INT8 + arredondamento estocástico no resíduo |
-|---|---|---|---|
-| 2.500 | 1,856 | **2,068** (melhor) | 2,053 (melhor: 2,033 no passo 4.000) |
-| 10.000 | 1,580 | 2,367 | 2,578 |
-| 19.500 | 1,471 | 3,678 (estourou no 19.723) | 3,388 |
+| passo | float32 | INT8 | INT8 + arredondamento estocástico no resíduo | INT8 + resíduo de 16 bits (E1) |
+|---|---|---|---|---|
+| 2.500 | 1,856 | **2,068** (melhor) | 2,053 (melhor: 2,033 no passo 4.000) | 2,094 (melhor: 2,021 no passo 4.000) |
+| 10.000 | 1,580 | 2,367 | 2,578 | 2,808 |
+| 19.500 | 1,471 | 3,678 (estourou no 19.723) | 3,388 | 3,512 |
 
 ### 🔎 Por quê: o resíduo "engole" as camadas de cima
 
@@ -132,6 +132,13 @@ flowchart LR
 - **Correção testada:** arredondamento estocástico na soma residual (`jt_res_estocastico`). A atualização pequena
   passa a sobreviver na média. Isso **evitou o estouro**, mas **não a degradação**. A absorção agrava o problema, mas
   não o causa: o que faz o resíduo crescer ficou em aberto.
+- **Correção testada (E1):** resíduo com **16 bits de mantissa** no forward e no gradiente, com as multiplicações
+  ainda em INT8 (`k_soma16`, `JATAI_RES16=1`). Os kernels são exatos e reduzem a perda de uma parcela 4096x menor de
+  61% para 4%, sem custo de velocidade (10.860 tokens/s). **A curva foi a mesma:** melhor 2,021 no passo 4.000, depois
+  degradação.
+- **Conclusão:** três versões do resíduo dão a mesma curva, então a absorção é sintoma, não causa. O suspeito que
+  resta é o **otimizador**: o gradiente da camada 0 chega a ~70% de zeros, e o momento e os pesos ficam em INT8. A
+  linha INT8 foi encerrada aqui; esse diagnóstico fica como trabalho futuro.
 
 ---
 

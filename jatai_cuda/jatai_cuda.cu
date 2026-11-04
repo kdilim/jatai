@@ -443,6 +443,93 @@ __global__ void k_soma(const int8_t* __restrict__ xm, const int8_t* __restrict__
     if (lane == 0) zE[w] = (int8_t)Eo;
 }
 
+// ============================================================================ esteira residual de 16 bits (E1)
+// Formato R16: mantissa int16 (|m| <= 32767) + expoente int8 por bloco de 128, como o INT8 mas com 8 bits a mais de
+// mantissa. So o fluxo residual (forward x e backward gx) usa R16; toda multiplicacao continua em INT8 (dp4a), lendo
+// uma copia de 8 bits (k_para8). Motivo: no INT8 as atualizacoes pequenas sumiam ao somar no residuo grande
+// (RELATORIO 7.7); com 15 bits de mantissa sobra 2^8 = 256x mais folga.
+__device__ void quant_warp16(const int v[4], const int e[4], int16_t m[4], int& Eo, int kid, long long idx0) {
+    int topo = SEM_TOPO;
+#pragma unroll
+    for (int i = 0; i < 4; i++) {
+        if (v[i] >= LIM || v[i] <= -LIM) reporta(E_ACUM, kid, idx0 + (threadIdx.x & 31) * 4 + i, v[i], e[i]);
+        if (v[i] != 0) topo = max(topo, e[i] + bitlen(v[i]));
+    }
+    topo = warp_max(topo);
+    if (topo == SEM_TOPO) {
+#pragma unroll
+        for (int i = 0; i < 4; i++) m[i] = 0;
+        Eo = E_ZERO;
+        return;
+    }
+    int E = topo - 15, q[4], est = 0;
+#pragma unroll
+    for (int i = 0; i < 4; i++) { q[i] = rnd(v[i], E - e[i], kid, idx0); est |= q[i] > 32767 || q[i] < -32767; }
+    if (__any_sync(0xffffffffu, est)) {
+        E += 1;
+#pragma unroll
+        for (int i = 0; i < 4; i++) q[i] = rnd(v[i], E - e[i], kid, idx0);
+    }
+    if (E < -126) {
+#pragma unroll
+        for (int i = 0; i < 4; i++) m[i] = 0;
+        Eo = E_ZERO;
+        return;
+    }
+    if (E > 126) reporta(E_EXP, kid, idx0, E, topo);
+#pragma unroll
+    for (int i = 0; i < 4; i++) m[i] = (int16_t)max(-32767, min(32767, q[i]));
+    Eo = E;
+}
+__device__ __forceinline__ void le4_16(const int16_t* p, int v[4]) {
+    const short4 s = *reinterpret_cast<const short4*>(p);
+    v[0] = s.x; v[1] = s.y; v[2] = s.z; v[3] = s.w;
+}
+__device__ __forceinline__ void grava4_16(int16_t* p, const int16_t m[4]) {
+    *reinterpret_cast<short4*>(p) = make_short4(m[0], m[1], m[2], m[3]);
+}
+// INT8 -> R16 (exato: m << 7, E - 7)
+__global__ void k_para16(const int8_t* __restrict__ xm, const int8_t* __restrict__ xE, int16_t* __restrict__ zm,
+                         int8_t* __restrict__ zE, long long nblocos, int kid) {
+    WARP_BLOCO
+    int a[4];
+    le4(xm + o, a);
+    const int16_t z[4] = {(int16_t)(a[0] << 7), (int16_t)(a[1] << 7), (int16_t)(a[2] << 7), (int16_t)(a[3] << 7)};
+    grava4_16(zm + o, z);
+    if (lane == 0) zE[w] = xE[w] == E_ZERO ? (int8_t)E_ZERO : (int8_t)(xE[w] - 7);
+}
+// R16 -> INT8 (arredondamento par, mesma regra do quant_warp): a copia que entra no dp4a
+__global__ void k_para8(const int16_t* __restrict__ xm, const int8_t* __restrict__ xE, int8_t* __restrict__ ym,
+                        int8_t* __restrict__ yE, long long nblocos, int kid) {
+    WARP_BLOCO
+    int v[4], ee[4];
+    le4_16(xm + o, v);
+#pragma unroll
+    for (int i = 0; i < 4; i++) ee[i] = xE[w];
+    int8_t q[4]; int Eo;
+    quant_warp(v, ee, q, Eo, kid, o - lane * 4);
+    grava4(ym + o, q);
+    if (lane == 0) yE[w] = (int8_t)Eo;
+}
+// z (R16) = x (R16) + y (INT8). Alinhamento: ec = max(ex + 15, ey + 7) - 28 -> as duas parcelas ficam < 2^28 e a
+// parcela pequena guarda ate 13 bits abaixo do ultimo bit de x antes de arredondar.
+__global__ void k_soma16(const int16_t* __restrict__ xm, const int8_t* __restrict__ xE, const int8_t* __restrict__ ym,
+                         const int8_t* __restrict__ yE, int16_t* __restrict__ zm, int8_t* __restrict__ zE, long long nblocos, int kid) {
+    WARP_BLOCO
+    int a[4], b[4], v[4], ee[4];
+    le4_16(xm + o, a); le4(ym + o, b);
+    const int ex = xE[w], ey = yE[w], ec = max(ex + 15, ey + 7) - 28;
+#pragma unroll
+    for (int i = 0; i < 4; i++) {
+        v[i] = (ex == E_ZERO ? 0 : rnd(a[i], ec - ex, kid, o + i)) + (ey == E_ZERO ? 0 : rnd(b[i], ec - ey, kid, o + i));
+        ee[i] = ec;
+    }
+    int16_t q[4]; int Eo;
+    quant_warp16(v, ee, q, Eo, kid, o - lane * 4);
+    grava4_16(zm + o, q);
+    if (lane == 0) zE[w] = (int8_t)Eo;
+}
+
 // ReLU^2 forward: a = max(h,0)^2
 __global__ void k_relu2(const int8_t* __restrict__ hm, const int8_t* __restrict__ hE, int8_t* __restrict__ am,
                         int8_t* __restrict__ aE, long long nblocos, int kid) {
@@ -984,6 +1071,19 @@ int jt_erro_limpa() {
     return (int)cudaMemcpyToSymbol(g_erro, &e, sizeof(Erro));
 }
 int jt_sincroniza() { return (int)cudaDeviceSynchronize(); }
+int jt_para16(const void* xm, const void* xE, void* zm, void* zE, long long nblocos, int kid) {
+    k_para16<<<nblk(nblocos), 256, 0, g_stream>>>((const int8_t*)xm, (const int8_t*)xE, (int16_t*)zm, (int8_t*)zE, nblocos, kid);
+    return (int)cudaGetLastError();
+}
+int jt_para8(const void* xm, const void* xE, void* ym, void* yE, long long nblocos, int kid) {
+    k_para8<<<nblk(nblocos), 256, 0, g_stream>>>((const int16_t*)xm, (const int8_t*)xE, (int8_t*)ym, (int8_t*)yE, nblocos, kid);
+    return (int)cudaGetLastError();
+}
+int jt_soma16(const void* xm, const void* xE, const void* ym, const void* yE, void* zm, void* zE, long long nblocos, int kid) {
+    k_soma16<<<nblk(nblocos), 256, 0, g_stream>>>((const int16_t*)xm, (const int8_t*)xE, (const int8_t*)ym, (const int8_t*)yE,
+                                                  (int16_t*)zm, (int8_t*)zE, nblocos, kid);
+    return (int)cudaGetLastError();
+}
 int jt_res_estocastico(int ligado) { return (int)cudaMemcpyToSymbol(g_res_est, &ligado, sizeof(int)); }
 void jt_stream(void* st) { g_stream = (cudaStream_t)st; }
 void jt_gemm_split(int alvo_blocos) { g_alvo_blocos = alvo_blocos; }

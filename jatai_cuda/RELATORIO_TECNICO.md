@@ -680,6 +680,20 @@ correção), e a MESMA degradação depois (3,22 no passo 18.000, contra 3,38 na
 não é a causa do crescimento do resíduo: o que faz as saídas da camada 0 crescerem continua sem explicação.
 Critério de corte definido antes do teste (INT8 a até ~0,15 do float em 20 mil passos): não atingido.
 
+**E1: fluxo residual com mantissa de 16 bits** (`k_para16`, `k_para8`, `k_soma16`, formato R16 = mantissa int16 +
+expoente int8 por bloco de 128; `JATAI_RES16=1`; `teste_res16.py`; `logs/noite_int8_L24_ff2048_res16.csv`). Ideia:
+manter todas as multiplicações em INT8 (`dp4a`) e dar 8 bits a mais só ao que acumula, o resíduo do forward e o
+gradiente que volta por ele. Teste dos kernels: ida e volta INT8 -> R16 -> INT8 exata; somando uma parcela 2^12
+vezes menor que o resíduo, a soma INT8 perdia 61% dela e a R16 perde 4%. Treino (mesmos pesos iniciais e lotes):
+melhor validação 2,021 no passo 4.000 (INT8: 2,068), depois a mesma degradação (2,81 no passo 10.000; 3,51 no
+19.500). Velocidade 10.860 tokens/s, igual à do INT8 sem a mudança. Critério de corte não atingido.
+
+**Conclusão dos três testes:** arredondamento estocástico no resíduo, 256x mais folga no resíduo e o resíduo
+original dão a mesma curva. A perda no resíduo é real (medida acima), mas é sintoma, não causa. O suspeito que
+resta é o otimizador: o gradiente da atenção da camada 0 tem 68–72% de zeros depois do passo ~8.000, e o momento e
+o peso são guardados em INT8; o diagnóstico (gradiente e passo de atualização INT8 contra float, tensor por tensor,
+no ponto de melhor validação) fica como trabalho futuro. A linha INT8 foi encerrada neste ponto.
+
 **Quanto trabalho dá para cortar sem mudar a memória** (`medir_tempo.py`, `logs/medir_tempo.log`, pesos do float32
 de 24 camadas, 4.096 tokens de validação):
 - Delta entre tokens seguidos: só 1–2% das entradas INT8 de qkv, Wo e Wup se repetem; na entrada de Wd (ReLU²),

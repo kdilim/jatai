@@ -17,9 +17,9 @@ FIG = os.path.join(AQUI, "figuras")
 
 MODOS = {
     "claro": dict(fundo="#ffffff", texto="#1f2328", texto2="#59636e", grade="#d1d9e0", ref="#8c959f",
-                  s=["#2a78d6", "#eb6834", "#1baf7a"]),
+                  s=["#2a78d6", "#eb6834", "#1baf7a", "#eda100"]),
     "escuro": dict(fundo="#0d1117", texto="#f0f6fc", texto2="#9198a1", grade="#30363d", ref="#6e7681",
-                   s=["#3987e5", "#d95926", "#199e70"]),
+                   s=["#3987e5", "#d95926", "#199e70", "#c98500"]),
 }
 
 
@@ -72,7 +72,7 @@ def barras(nome, titulo, rot, val, fmt, xl, destaque=None, ref=None):
 
 
 def linhas(nome, titulo, series, xl, yl, logx=False, ylim=None, rotulos_fim=True, ref=None, fmt=lambda v: f"{v:.2f}".replace(".", ",")):
-    estilos = ["-", (0, (5, 2)), (0, (1, 1.5))]
+    estilos = ["-", (0, (5, 2)), (0, (1, 1.5)), (0, (6, 2, 1, 2))]
     for modo, c in MODOS.items():
         fig, ax = plt.subplots(figsize=(8, 4.2), facecolor=c["fundo"])
         eixo(ax, c, titulo, xl, yl)
@@ -108,10 +108,12 @@ def main():
     pf, lf = le_csv("noite_float_L24_ff2048.csv")
     pi, li = le_csv("noite_int8_L24_ff2048.csv")
     pe, le = le_csv("noite_int8_L24_ff2048_resest.csv")
+    p16, l16 = le_csv("noite_int8_L24_ff2048_res16.csv")
     lim = 20000
     corta = lambda p, l: ([a for a in p if a <= lim], [b for a, b in zip(p, l) if a <= lim])
     linhas("int8_treino_longo", "Treino longo, 24 camadas: loss de validação (menor é melhor)",
-           [("float32", *corta(pf, lf)), ("INT8", pi, li), ("INT8 + arredondamento estocástico no resíduo", pe, le)],
+           [("float32", *corta(pf, lf)), ("INT8", pi, li), ("INT8 + arredondamento estocástico no resíduo", pe, le),
+            ("INT8 + resíduo de 16 bits (E1)", p16, l16)],
            "passo de treino", "loss de validação (nats/byte)", ylim=(1.3, 4.1))
     # 3. absorção no resíduo
     def absor(arq):

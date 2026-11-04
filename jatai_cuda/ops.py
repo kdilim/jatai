@@ -300,7 +300,7 @@ class OpsCuda:
         self.lib.jt_stream.argtypes = [ctypes.c_void_p]
         for f in ("jt_gemm", "jt_gemm_f", "jt_quant", "jt_soma", "jt_relu2", "jt_relu2_back", "jt_momento", "jt_peso", "jt_transpoe",
                   "jt_embed", "jt_um_quente", "jt_rms", "jt_rms_back", "jt_atencao", "jt_atencao_back", "jt_softmax_ce", "jt_erro_le",
-                  "jt_erro_limpa", "jt_sincroniza"):
+                  "jt_erro_limpa", "jt_sincroniza", "jt_para16", "jt_para8", "jt_soma16"):
             getattr(self.lib, f).restype = ctypes.c_int
         self.lib.jt_erro_le.argtypes = [ctypes.c_void_p]
         reg.lib = self.lib
@@ -402,6 +402,28 @@ class OpsCuda:
 
     def soma(self, X, Y):
         return self._elem("soma", "jt_soma", (X, Y), ("x", "y"))
+
+    # ---- esteira residual de 16 bits (E1): (mantissa int16, expoente int8 por bloco de 128)
+    def _r16(self, op, fn, args, ent, forma, saida16):
+        m0 = args[0]
+        R, C = forma
+        Y = (torch.empty(R, C, dtype=torch.int16 if saida16 else torch.int8, device=m0.device),
+             torch.empty(R, C // BLK, dtype=torch.int8, device=m0.device))
+        a = list(args) + [Y[0], Y[1], R * C // BLK]
+        self._lanca(op, fn, a, ent, forma, longos=(len(a) - 1,))
+        return Y
+
+    def para16(self, X):
+        self.reg.confere_bloco("x", X)
+        return self._r16("para16", "jt_para16", X, dict(x=X[0], xE=X[1]), tuple(X[0].shape), True)
+
+    def para8(self, X16):
+        return self._r16("para8", "jt_para8", X16, dict(x16=X16[0], xE=X16[1]), tuple(X16[0].shape), False)
+
+    def soma16(self, X16, Y):
+        self.reg.confere_bloco("y", Y)
+        self.reg.exige(tuple(Y[0].shape) == tuple(X16[0].shape), f"soma16: formas {tuple(X16[0].shape)} e {tuple(Y[0].shape)}")
+        return self._r16("soma16", "jt_soma16", (*X16, *Y), dict(x16=X16[0], y=Y[0]), tuple(X16[0].shape), True)
 
     def relu2(self, Hh):
         return self._elem("relu2", "jt_relu2", (Hh,), ("h",))
