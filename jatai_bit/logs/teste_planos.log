@@ -1,0 +1,13 @@
+== exatidão (planos x produto de códigos em int64)
+  ativações 1 bit(s) x pesos 1 bit(s): EXATO
+  ativações 1 bit(s) x pesos 2 bit(s): EXATO
+  ativações 2 bit(s) x pesos 2 bit(s): EXATO
+  ativações 2 bit(s) x pesos 3 bit(s): EXATO
+  ativações 3 bit(s) x pesos 3 bit(s): EXATO
+  ativações 4 bit(s) x pesos 4 bit(s): EXATO
+== velocidade (ms por produto; tokens x saída x entrada)
+  1024x256x256: int8 dp4a   0.039 ms | 1 bit(s)   0.029 ms (1.32x) | 2 bit(s)   0.037 ms (1.04x) | 3 bit(s)   0.076 ms (0.51x)
+  1024x1024x256: int8 dp4a   0.124 ms | 1 bit(s)   0.048 ms (2.60x) | 2 bit(s)   0.120 ms (1.04x) | 3 bit(s)   0.260 ms (0.48x)
+  1024x4096x4096: int8 dp4a   5.407 ms | 1 bit(s)   1.549 ms (3.49x) | 2 bit(s)   5.378 ms (1.01x) | 3 bit(s)  11.956 ms (0.45x)
+  8192x4096x4096: int8 dp4a  40.929 ms | 1 bit(s)  11.723 ms (3.49x) | 2 bit(s)  42.640 ms (0.96x) | 3 bit(s)  95.126 ms (0.43x)
+== memória dos pesos por 1M pesos: int8 1,00 MB | 3 bits 0,375 MB | 2 bits 0,25 MB | 1 bit 0,125 MB

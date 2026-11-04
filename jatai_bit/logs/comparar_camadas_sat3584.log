@@ -1,0 +1,95 @@
+
+===== passo 1000 (VRMS=1 PROJ=1) =====
+loss do lote: inteiro 2.4141 | réplica float 2.4135 | cos(logits) 0.9999
+FORWARD (cos da soma M e da saída da etapa)
+  bloco 0 v   cos(M) 1.0000  cos(saída) 1.0000
+  bloco 0 s   cos(M) 1.0000  cos(saída) 1.0000
+  bloco 0 xa  cos(M) 1.0000  cos(saída) 1.0000
+  bloco 0 h   cos(M) 1.0000  cos(saída) 0.9999
+  bloco 0 xb  cos(M) 1.0000  cos(saída) 0.9998
+  bloco 1 v   cos(M) 0.9999  cos(saída) 0.9998
+  bloco 1 s   cos(M) 1.0000  cos(saída) 0.9998
+  bloco 1 xa  cos(M) 0.9999  cos(saída) 0.9997
+  bloco 1 h   cos(M) 0.9998  cos(saída) 0.9995
+  bloco 1 xb  cos(M) 0.9998  cos(saída) 0.9995
+  bloco 2 v   cos(M) 0.9997  cos(saída) 0.9993
+  bloco 2 s   cos(M) 0.9999  cos(saída) 0.9995
+  bloco 2 xa  cos(M) 0.9996  cos(saída) 0.9994
+  bloco 2 h   cos(M) 0.9997  cos(saída) 0.9991
+  bloco 2 xb  cos(M) 0.9996  cos(saída) 0.9992
+  bloco 3 v   cos(M) 0.9995  cos(saída) 0.9987
+  bloco 3 s   cos(M) 0.9998  cos(saída) 0.9993
+  bloco 3 xa  cos(M) 0.9999  cos(saída) 0.9988
+  bloco 3 h   cos(M) 0.9994  cos(saída) 0.9984
+  bloco 3 xb  cos(M) 0.9998  cos(saída) 0.9966
+BACKWARD (cos do gradiente inteiro antes de quantizar x derivada exata)
+  dZ             cos 0.9997
+  dx saida       cos 0.9455
+  b3 dMd         cos 0.8507
+  b3 dMu         cos 0.8682
+  b3 dxa         cos 0.8469
+  b3 dMo         cos 0.8364
+  b3 dS          cos 0.8144
+  b3 dMv         cos 0.7962
+  b3 dx          cos 0.8289
+  b2 dMd         cos 0.8265
+  b2 dMu         cos 0.8352
+  b2 dxa         cos 0.8275
+  b2 dMo         cos 0.8217
+  b2 dS          cos 0.8239
+  b2 dMv         cos 0.8147
+  b2 dx          cos 0.8146
+  b1 dMd         cos 0.8093
+  b1 dMu         cos 0.8161
+  b1 dxa         cos 0.8096
+  b1 dMo         cos 0.8127
+  b1 dS          cos 0.8232
+  b1 dMv         cos 0.7941
+  b1 dx          cos 0.8107
+  b0 dMd         cos 0.8278
+  b0 dMu         cos 0.8420
+  b0 dxa         cos 0.8359
+  b0 dMo         cos 0.8398
+  b0 dS          cos 0.8664
+  b0 dMv         cos 0.8522
+  b0 dx          cos 0.8343
+GRADIENTE DOS PESOS (cos G inteiro x G exato)
+  E              cos 0.8430
+  bloco 0 Wv     cos 0.8558
+  bloco 0 Wo     cos 0.8529
+  bloco 0 Wu     cos 0.8410
+  bloco 0 Wd     cos 0.8189
+  bloco 1 Wv     cos 0.7692
+  bloco 1 Wo     cos 0.8286
+  bloco 1 Wu     cos 0.8220
+  bloco 1 Wd     cos 0.8190
+  bloco 2 Wv     cos 0.8179
+  bloco 2 Wo     cos 0.8657
+  bloco 2 Wu     cos 0.8436
+  bloco 2 Wd     cos 0.8501
+  bloco 3 Wv     cos 0.8018
+  bloco 3 Wo     cos 0.8822
+  bloco 3 Wu     cos 0.8608
+  bloco 3 Wd     cos 0.8780
+  saida          cos 0.9564
+KERNELS ISOLADOS (cos kernel x derivada exata da mesma entrada | cos que o int8 sozinho deixa)
+  b3 voto xb  -> dMd   cos(kernel) 0.9028
+  b3 norm h   -> dMu   cos(kernel) 0.9850 | cos(quant dMd) 0.9972
+  b3 voto xa  -> dMo   cos(kernel) 0.9984
+  b3 norm s   -> dS    cos(kernel) 0.9259 | cos(quant dMo) 0.9973
+  b3 scan+v   -> dMv   cos(kernel) 0.9941 | cos(12 bits dS) 0.9999
+  b2 voto xb  -> dMd   cos(kernel) 0.9992
+  b2 norm h   -> dMu   cos(kernel) 0.9921 | cos(quant dMd) 0.9954
+  b2 voto xa  -> dMo   cos(kernel) 0.9997
+  b2 norm s   -> dS    cos(kernel) 0.9844 | cos(quant dMo) 0.9904
+  b2 scan+v   -> dMv   cos(kernel) 0.9955 | cos(12 bits dS) 0.9999
+  b1 voto xb  -> dMd   cos(kernel) 0.9991
+  b1 norm h   -> dMu   cos(kernel) 0.9952 | cos(quant dMd) 0.9869
+  b1 voto xa  -> dMo   cos(kernel) 0.9997
+  b1 norm s   -> dS    cos(kernel) 0.9963 | cos(quant dMo) 0.9824
+  b1 scan+v   -> dMv   cos(kernel) 0.9979 | cos(12 bits dS) 1.0000
+  b0 voto xb  -> dMd   cos(kernel) 0.9999
+  b0 norm h   -> dMu   cos(kernel) 0.9989 | cos(quant dMd) 0.9868
+  b0 voto xa  -> dMo   cos(kernel) 1.0000
+  b0 norm s   -> dS    cos(kernel) 0.9998 | cos(quant dMo) 0.9936
+  b0 scan+v   -> dMv   cos(kernel) 0.9874 | cos(12 bits dS) 0.9999

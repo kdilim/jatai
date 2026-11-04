@@ -1,0 +1,6 @@
+*.so
+*.pt
+*.bak
+__pycache__/
+dados/
+**/logs/*.jsonl

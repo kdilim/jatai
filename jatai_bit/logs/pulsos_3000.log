@@ -1,0 +1,5 @@
+modelo 3000 passos (SAT=3584 VRMS=1 PROJ=1) | rede de médias: loss 2.212 acurácia 36.1%
+pesos sinal   ativações sinal   | N=1: 7.2% loss 4.153
+pesos sinal   ativações sorteio | N=1: 7.1% loss 4.138 | N=4: 7.4% loss 4.128 | N=16: 7.4% loss 4.127 | N=64: 7.4% loss 4.126 | N=256: 7.6% loss 4.126
+pesos sorteio ativações sinal   | N=1: 4.8% loss 4.436 | N=4: 9.0% loss 3.827 | N=16: 12.0% loss 3.479 | N=64: 14.0% loss 3.314 | N=256: 15.7% loss 3.267
+pesos sorteio ativações sorteio | N=1: 5.4% loss 4.469 | N=4: 7.8% loss 3.863 | N=16: 11.9% loss 3.504 | N=64: 13.6% loss 3.321 | N=256: 15.4% loss 3.272

@@ -1,0 +1,5 @@
+norm+g L4 lr0.003 passo     0 | loss val (médias) 5.563 acurácia 0.1% | rede binária: acurácia 2.0% | |w| médio 0.25, certos (|w|>0,8) 0% | 5s
+norm+g L4 lr0.003 passo   500 | loss val (médias) 2.534 acurácia 27.9% | rede binária: acurácia 7.9% | |w| médio 0.26, certos (|w|>0,8) 0% | 289s
+norm+g L4 lr0.003 passo  1000 | loss val (médias) 2.388 acurácia 31.2% | rede binária: acurácia 7.3% | |w| médio 0.26, certos (|w|>0,8) 0% | 619s
+norm+g L4 lr0.003 passo  1500 | loss val (médias) 2.281 acurácia 33.2% | rede binária: acurácia 8.3% | |w| médio 0.27, certos (|w|>0,8) 0% | 923s
+norm+g L4 lr0.003 passo  2000 | loss val (médias) 2.209 acurácia 35.8% | rede binária: acurácia 9.8% | |w| médio 0.27, certos (|w|>0,8) 1% | 1318s

@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "Se usar este código, os resultados ou as ideias desta pesquisa, por favor cite assim."
+title: "Jataí: treino de redes neurais só com inteiros (INT8) e só com bits, numa GPU sem tensor cores"
+authors:
+  - given-names: "Cadmiel L. P."
+    family-names: "de Almeida"
+date-released: 2026-11-04
+version: "1.0"
+license: MIT
+repository-code: "https://github.com/kdilim/jatai"
+keywords:
+  - int8 training
+  - integer-only training
+  - binary neural networks
+  - CUDA
+  - quantization

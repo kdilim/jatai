@@ -1,0 +1,33 @@
+modelo_bit_L4D256F1024_bt8_sh6_T6144_tr6144_r2_v1_e1_p0_j1_vr1_s1: 2.77 M pesos binários (0.35 MB empacotados) | 3000 passos de 8x128 tokens
+régua: unigrama de bytes = 3.301 nats/byte (chutar pela frequência, sem contexto)
+passo     0 | loss treino 0.000 | loss val (rede de médias) 5.611 acurácia 0.3% | rede 100% binária: acurácia 0.2%, loss calibrada 5.548 | 0 tokens/s
+passo   100 | loss treino 3.393 | loss val (rede de médias) 3.075 acurácia 20.0% | rede 100% binária: acurácia 8.7%, loss calibrada 4.472 | 33,688 tokens/s
+passo   200 | loss treino 2.945 | loss val (rede de médias) 2.932 acurácia 22.8% | rede 100% binária: acurácia 9.1%, loss calibrada 4.148 | 35,181 tokens/s
+passo   300 | loss treino 2.834 | loss val (rede de médias) 2.856 acurácia 22.8% | rede 100% binária: acurácia 9.1%, loss calibrada 4.012 | 33,146 tokens/s
+passo   400 | loss treino 2.786 | loss val (rede de médias) 2.790 acurácia 23.9% | rede 100% binária: acurácia 11.0%, loss calibrada 3.838 | 33,462 tokens/s
+passo   500 | loss treino 2.733 | loss val (rede de médias) 2.750 acurácia 24.5% | rede 100% binária: acurácia 13.1%, loss calibrada 3.748 | 33,462 tokens/s
+passo   600 | loss treino 2.720 | loss val (rede de médias) 2.754 acurácia 23.1% | rede 100% binária: acurácia 11.5%, loss calibrada 3.740 | 32,302 tokens/s
+passo   700 | loss treino 2.683 | loss val (rede de médias) 2.704 acurácia 24.3% | rede 100% binária: acurácia 12.5%, loss calibrada 3.665 | 33,112 tokens/s
+passo   800 | loss treino 2.685 | loss val (rede de médias) 2.694 acurácia 24.6% | rede 100% binária: acurácia 9.8%, loss calibrada 3.672 | 31,303 tokens/s
+passo   900 | loss treino 2.663 | loss val (rede de médias) 2.681 acurácia 24.5% | rede 100% binária: acurácia 7.1%, loss calibrada 3.719 | 31,232 tokens/s
+passo  1000 | loss treino 2.666 | loss val (rede de médias) 2.678 acurácia 24.5% | rede 100% binária: acurácia 7.2%, loss calibrada 3.730 | 30,176 tokens/s
+passo  1100 | loss treino 2.657 | loss val (rede de médias) 2.661 acurácia 24.5% | rede 100% binária: acurácia 7.9%, loss calibrada 3.795 | 29,281 tokens/s
+passo  1200 | loss treino 2.621 | loss val (rede de médias) 2.644 acurácia 25.2% | rede 100% binária: acurácia 7.5%, loss calibrada 3.857 | 30,416 tokens/s
+passo  1300 | loss treino 2.611 | loss val (rede de médias) 2.650 acurácia 25.0% | rede 100% binária: acurácia 7.4%, loss calibrada 3.874 | 29,511 tokens/s
+passo  1400 | loss treino 2.616 | loss val (rede de médias) 2.636 acurácia 25.5% | rede 100% binária: acurácia 7.7%, loss calibrada 3.854 | 28,376 tokens/s
+passo  1500 | loss treino 2.613 | loss val (rede de médias) 2.631 acurácia 25.5% | rede 100% binária: acurácia 7.2%, loss calibrada 3.874 | 26,946 tokens/s
+passo  1600 | loss treino 2.612 | loss val (rede de médias) 2.630 acurácia 25.6% | rede 100% binária: acurácia 6.8%, loss calibrada 3.885 | 25,307 tokens/s
+passo  1700 | loss treino 2.611 | loss val (rede de médias) 2.636 acurácia 25.7% | rede 100% binária: acurácia 7.4%, loss calibrada 3.887 | 26,555 tokens/s
+passo  1800 | loss treino 2.593 | loss val (rede de médias) 2.626 acurácia 25.2% | rede 100% binária: acurácia 7.2%, loss calibrada 3.955 | 25,342 tokens/s
+passo  1900 | loss treino 2.603 | loss val (rede de médias) 2.622 acurácia 25.7% | rede 100% binária: acurácia 7.0%, loss calibrada 3.969 | 26,974 tokens/s
+passo  2000 | loss treino 2.611 | loss val (rede de médias) 2.623 acurácia 25.2% | rede 100% binária: acurácia 7.5%, loss calibrada 4.007 | 27,851 tokens/s
+passo  2100 | loss treino 2.597 | loss val (rede de médias) 2.621 acurácia 25.1% | rede 100% binária: acurácia 6.9%, loss calibrada 3.998 | 24,351 tokens/s
+passo  2200 | loss treino 2.585 | loss val (rede de médias) 2.621 acurácia 25.1% | rede 100% binária: acurácia 8.8%, loss calibrada 4.027 | 26,296 tokens/s
+passo  2300 | loss treino 2.597 | loss val (rede de médias) 2.612 acurácia 25.1% | rede 100% binária: acurácia 8.0%, loss calibrada 4.055 | 25,133 tokens/s
+passo  2400 | loss treino 2.586 | loss val (rede de médias) 2.607 acurácia 25.5% | rede 100% binária: acurácia 7.5%, loss calibrada 4.055 | 26,004 tokens/s
+passo  2500 | loss treino 2.588 | loss val (rede de médias) 2.603 acurácia 25.4% | rede 100% binária: acurácia 8.3%, loss calibrada 4.091 | 25,609 tokens/s
+passo  2600 | loss treino 2.581 | loss val (rede de médias) 2.604 acurácia 25.6% | rede 100% binária: acurácia 7.8%, loss calibrada 4.142 | 25,247 tokens/s
+passo  2700 | loss treino 2.581 | loss val (rede de médias) 2.608 acurácia 25.7% | rede 100% binária: acurácia 7.7%, loss calibrada 4.090 | 24,987 tokens/s
+passo  2800 | loss treino 2.583 | loss val (rede de médias) 2.605 acurácia 25.3% | rede 100% binária: acurácia 5.6%, loss calibrada 4.084 | 25,067 tokens/s
+passo  2900 | loss treino 2.575 | loss val (rede de médias) 2.602 acurácia 25.5% | rede 100% binária: acurácia 6.7%, loss calibrada 4.092 | 23,860 tokens/s
+passo  3000 | loss treino 2.580 | loss val (rede de médias) 2.604 acurácia 25.9% | rede 100% binária: acurácia 7.7%, loss calibrada 4.129 | 26,668 tokens/s

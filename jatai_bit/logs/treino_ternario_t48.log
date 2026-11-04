@@ -1,0 +1,18 @@
+passo     0 | médias: loss 5.611 acurácia 0.3% | contadores em 0: 1%, em ±127: 0%
+passo   500 | médias: loss 2.608 acurácia 27.9% | contadores em 0: 1%, em ±127: 0%
+passo  1000 | médias: loss 2.475 acurácia 29.5% | contadores em 0: 1%, em ±127: 0%
+passo  1500 | médias: loss 2.373 acurácia 32.0% | contadores em 0: 1%, em ±127: 0%
+passo  2000 | médias: loss 2.684 acurácia 25.0% | contadores em 0: 17%, em ±127: 11%
+passo  2500 | médias: loss 2.727 acurácia 23.8% | contadores em 0: 23%, em ±127: 15%
+passo  3000 | médias: loss 2.770 acurácia 23.7% | contadores em 0: 28%, em ±127: 17%
+salvo jatai_bit/logs/ternario_modelo_3000_t48_r32_i0.5.pt
+contadores de logs/ternario_modelo_3000_t48_r32_i0.5.pt
+τw (zeros) | médias: loss acurácia | rede final, ativações binárias e ternárias τa = 16 / 32 / 48 / 64
+contador  ( 28%) | 2.770 23.7% |  1.2% /  0.0% /  0.0% /  0.0% /  0.0%
+τw=  0    ( 28%) | 10.224 10.4% | 10.3% / 10.3% / 10.1% /  9.9% /  9.6%
+τw=  8    ( 70%) | 3.220 19.0% |  9.0% / 11.8% / 11.8% / 12.0% / 12.6%
+τw= 16    ( 70%) | 3.220 19.0% |  9.0% / 11.8% / 11.8% / 12.0% / 12.6%
+τw= 24    ( 70%) | 3.220 19.0% |  9.0% / 11.8% / 11.8% / 12.0% / 12.6%
+τw= 32    ( 70%) | 3.220 19.0% |  9.0% / 11.8% / 11.8% / 12.0% / 12.6%
+τw= 48    ( 70%) | 3.220 19.0% |  9.0% / 11.8% / 11.8% / 12.0% / 12.6%
+τw= 64    ( 70%) | 3.220 19.0% |  9.0% / 11.8% / 11.8% / 12.0% / 12.6%
